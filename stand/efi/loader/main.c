@@ -859,6 +859,14 @@ main(int argc, CHAR16 *argv[])
 		fail_timeout = strtol(s, NULL, 10);
 
 	/*
+	 * Initialize a few environment variables from UEFI.
+	 */
+	rv = efi_init_environment();
+
+	if (rv != EFI_SUCCESS)
+		printf("failed to initialize environment from UEFI\n");
+
+	/*
 	 * Scan the BLOCK IO MEDIA handles then
 	 * march through the device switch probing for things.
 	 */
@@ -984,8 +992,6 @@ main(int argc, CHAR16 *argv[])
 	if (find_currdev(img, uefi_boot_mgr, is_last, boot_info, bisz) != 0)
 		if (!interactive_interrupt("Failed to find bootable partition"))
 			return (EFI_NOT_FOUND);
-
-	efi_init_environment();
 
 #if !defined(__arm__)
 	for (k = 0; k < ST->NumberOfTableEntries; k++) {

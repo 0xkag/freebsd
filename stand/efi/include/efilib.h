@@ -108,7 +108,7 @@ void efi_exit(EFI_STATUS status) __dead2;
 void delay(int usecs);
 
 /* EFI environment initialization. */
-void efi_init_environment(void);
+int efi_init_environment(void);
 
 /* EFI Memory type strings. */
 const char *efi_memory_type(EFI_MEMORY_TYPE);

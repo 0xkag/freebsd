@@ -35,14 +35,29 @@ __FBSDID("$FreeBSD$");
 #include <stdbool.h>
 #include "bootstrap.h"
 
-void
+int
 efi_init_environment(void)
 {
-	char var[128];
+	char		var[256];
+	int 		lflag = 0;
+	EFI_STATUS	status;
+	UINTN		datasz;
 
 	snprintf(var, sizeof(var), "%d.%02d", ST->Hdr.Revision >> 16,
 	    ST->Hdr.Revision & 0xffff);
 	env_setenv("efi-version", EV_VOLATILE, var, env_noset, env_nounset);
+
+	datasz = sizeof(var);
+	bzero(var, sizeof(var));
+	status = efi_freebsd_getenv("kern.geom.eli.passphrase", var, &datasz);
+	if (status == EFI_SUCCESS) {
+		env_setenv("kern.geom.eli.passphrase", EV_VOLATILE, var, env_noset,
+		    env_nounset);
+	} else if (status != EFI_NOT_FOUND) {
+		return (status);
+	}
+
+	return (EFI_SUCCESS);
 }
 
 COMMAND_SET(efishow, "efi-show", "print some or all EFI variables", command_efi_show);
