@@ -869,6 +869,8 @@ main(int argc, CHAR16 *argv[])
 	char boot_info[4096];
 	char buf[32];
 	bool uefi_boot_mgr;
+	char geom_eli_passphrase[256];
+	UINTN geom_eli_bufsz;
 
 	archsw.arch_autoload = efi_autoload;
 	archsw.arch_getdev = efi_getdev;
@@ -901,6 +903,22 @@ main(int argc, CHAR16 *argv[])
 	 * Initialise the block cache. Set the upper limit.
 	 */
 	bcache_init(32768, 512);
+
+	/*
+	 * Read kern.geom.eli.passphrase from the EFI environment under the
+	 * FreeBSD EFI GUID namespace (efi_freebsd_getenv).  Read before scanning
+	 * block IO media so that it's available when probing.
+	 */
+	geom_eli_bufsz = sizeof(geom_eli_passphrase);
+	bzero(geom_eli_passphrase, geom_eli_bufsz);
+	rv = efi_freebsd_getenv("kern.geom.eli.passphrase", geom_eli_passphrase,
+	    &geom_eli_bufsz);
+	if (rv == EFI_SUCCESS) {
+		printf("kern.geom.eli.phassphrase read from EFI env\n");
+		env_setenv("kern.geom.eli.passphrase", EV_VOLATILE,
+		    &geom_eli_passphrase, env_noset, env_nounset);
+		bzero(geom_eli_passphrase, geom_eli_bufsz);
+	}
 
 	/*
 	 * Scan the BLOCK IO MEDIA handles then
